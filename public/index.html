@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/2.4.7/shaka-player.compiled.js"></script>
+  </head>
+  <body>
+    <video id="video" class="player" controls ></video>
+    <script>
+      // Change me to actual content manifest url
+      const manifestUri = 'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd'
+      
+      function initApp() {
+        const video = document.getElementById('video')
+        video.style.height = document.documentElement.clientHeight + 'px'
+        video.style.width = document.documentElement.clientWidth + 'px'
+
+        // Install built-in polyfills to patch browser incompatibilities.
+        shaka.polyfill.installAll()
+
+        if (!shaka.Player.isBrowserSupported()) {
+          alert('Browser not supported!')
+          return
+        }
+
+        // Create a Player instance.
+        const player = new shaka.Player(video)
+      
+        player.configure({
+          drm: {
+            servers: {
+              // PX is linked to individual EZDRM account
+              'com.widevine.alpha': 'https://widevine-dash.ezdrm.com/proxy?pX=FCB7FA'
+            }
+          }
+        })
+      
+        // Attach player to the window to make it easy to access in the JS console.
+        window.player = player
+      
+        // Listen for error events.
+        player.addEventListener('error', onErrorEvent)
+      
+        // Try to load a manifest.
+        // This is an asynchronous process.
+        player.load(manifestUri).then(function() {
+          // This runs if the asynchronous load is successful.
+          console.log('The video has now been loaded!')
+          
+        }).catch(onError)  // onError is executed if the asynchronous load fails.
+      }
+      
+      function onErrorEvent(event) {
+        // Extract the shaka.util.Error object from the event.
+        onError(event.detail)
+      }
+      
+      function onError(error) {
+        // Log the error.
+        console.error('Error code', error.code, 'object', error)
+      }
+      
+      document.addEventListener('DOMContentLoaded', initApp)
+    </script>
+  </body>
+</html>
